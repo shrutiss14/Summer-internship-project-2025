@@ -1,0 +1,10 @@
+numpy
+pandas
+yfinance
+PyPortfolioOpt
+pytest
+scikit-learn
+cvxpy
+lxml
+matplotlib
+
