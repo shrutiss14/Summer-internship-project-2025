@@ -1,8 +1,8 @@
-from comparison_metric import compute_cagr_from_weekly_returns,sharpe_ratio,annualised_volatility,max_drawdown,sortino_ratio,treynor_ratio,information_ratio
+from comparison_metric import compute_cagr_from_weekly_returns,sharpe_ratio,annualised_volatility,max_drawdown_by_vol,sortino_ratio,treynor_ratio,information_ratio
 import pandas as pd
 
 
-portfolio_df=pd.read_csv("Global_min_variance_portfolio.csv",index_col="Date",parse_dates=True)
+portfolio_df=pd.read_csv("rf_portfolio_value.csv",index_col="Date",parse_dates=True)
 portfolio_returns = portfolio_df.pct_change(fill_method=None).dropna()
 portfolio_returns=portfolio_returns.squeeze()
 
@@ -16,7 +16,7 @@ print(f"CAGR: {cagr:.2%}")
 ann_vol=annualised_volatility(portfolio_returns)
 print("Annualised volatility",ann_vol)
 
-max_draw=max_drawdown(portfolio_df)
+max_draw=max_drawdown_by_vol(portfolio_df,portfolio_returns)
 print("Max Drawdown",max_draw)
 
 sharpe=sharpe_ratio(portfolio_returns)
@@ -37,18 +37,17 @@ print("Information Ratio",inf_rat)
 metrics = {
     "CAGR": [cagr],
     "Annualised Volatility": [ann_vol],
-    "Max Drawdown": [max_draw],
+    "Max Drawdown/vol": [max_draw],
     "Sharpe": [sharpe],
     "Sortino": [sortino],
-    "Treynor": [treynor],
-    "Information Ratio": [inf_rat]
+    "Treynor": [treynor]
 }
 
 # Convert to DataFrame
 metrics_df = pd.DataFrame(metrics)
 
 # Save to CSV
-metrics_df.to_csv("Global minimum variance portfolio metrics.csv", index=False)
+metrics_df.to_csv("rf_portfolio_value_metrics.csv", index=False)
 
 #__________________________________________________________________________________________________
 

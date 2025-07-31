@@ -12,7 +12,7 @@ def global_min_var_cvxpy(mu, S, w_prev, b_h, k, lamb, c_h, allow_short, tickers=
     w = cp.Variable(N)
 
     # Objective: variance + transaction cost
-    variance = cp.quad_form(w, S)
+    variance = cp.quad_form(w, cp.psd_wrap(S))
     if w_prev is not None:
         t_cost = lamb * cp.sum(cp.multiply(c_h, cp.abs(w - w_prev)))
     else:
@@ -59,7 +59,7 @@ def max_sharpe_modified_cvxpy(mu, S, k, allow_short, w_prev, lamb, c_h, tickers=
     y = cp.Variable(N)
     alpha = cp.Variable(pos=True)
 
-    variance = cp.quad_form(y, S)
+    variance = cp.quad_form(y, cp.psd_wrap(S))
 
     if w_prev is not None:
         w_prev=np.asarray(w_prev)

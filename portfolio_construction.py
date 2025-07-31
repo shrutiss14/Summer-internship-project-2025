@@ -4,6 +4,10 @@ import yfinance as yf
 from pypfopt.expected_returns import mean_historical_return,ema_historical_return,capm_return
 from pypfopt.risk_models import sample_cov,exp_cov,CovarianceShrinkage
 from new_optimisation_models import global_min_var_cvxpy,max_sharpe_modified_cvxpy
+from sklearn.metrics import r2_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 #_________________________________________________________________________________________________
 
@@ -48,8 +52,10 @@ dates=weekly_returns.index
 prev_weights_dict = None
 prev_valid_assets = None
 
+return_rows=[]
+
 window=520
-start_index=window
+start_index=573
 
 import time
 start_time = time.time()
@@ -118,9 +124,51 @@ for i in range(start_index, len(weekly_returns)):
     prev_weights_dict=cleaned_weights
     prev_valid_assets=valid_assets
 
+    if i + 1 < len(weekly_returns):  # to avoid index overflow
+        predicted_mu = mu  # generated in week i, for i+1
+
+        for stock in prev_valid_assets:
+            if stock in predicted_mu:
+                predicted = predicted_mu[stock]  # prediction at week i for i+1
+                actual = weekly_returns.iloc[i + 1][stock]  # actual return in i+1
+
+                return_rows.append({
+                    "Date": weekly_returns.index[i + 1],  # date of realized return
+                    "Ticker": stock,
+                    "predicted_return": predicted,
+                    "weekly_returns": actual
+                })
+
 
 end_time = time.time()
 print(f"Total runtime for solver: {end_time - start_time:.2f} seconds")
+#________________________________________________________________________________________________
+
+pred_vs_actual_df = pd.DataFrame(return_rows)
+
+r2 = r2_score(pred_vs_actual_df['weekly_returns'], pred_vs_actual_df['predicted_return'])
+print("R² score:",r2)
+
+
+#_____________________________________________________________________________________________________
+
+
+# Scatter plot with a regression line
+plt.figure(figsize=(8, 6))
+sns.regplot(
+    x=pred_vs_actual_df['predicted_return'],
+    y=pred_vs_actual_df['weekly_returns'],
+    line_kws={"color": "red"},
+    scatter_kws={"alpha": 0.6}
+)
+plt.xlabel("Predicted Returns (μ̂)")
+plt.ylabel("Actual Returns (r)")
+plt.title(f"Predicted vs Actual Weekly Returns (R² = {r2:.2f})")
+plt.grid(True)
+plt.axhline(0, color='gray', linestyle='--', linewidth=0.7)
+plt.axvline(0, color='gray', linestyle='--', linewidth=0.7)
+plt.tight_layout()
+plt.show()
 
 
 #__________________________________________________________________________________________________________________________
@@ -129,4 +177,4 @@ portfolio_df = pd.DataFrame({
 }, index=dates[start_index:])
 
 print(portfolio_df)
-portfolio_df.to_csv("Global_min_variance_portfolio.csv")
+portfolio_df.to_csv("CAPM_EWMA_GMV_portfolio.csv")

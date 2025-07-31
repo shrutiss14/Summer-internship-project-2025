@@ -18,12 +18,15 @@ def annualised_volatility(portfolio_returns):
     return annual_volatility
 
 
-def max_drawdown(portfolio_df):
+def max_drawdown_by_vol(portfolio_df,portfolio_returns):
     df=portfolio_df.copy()
     df['Running Peak']=df['Portfolio Value'].cummax()
     df['Drawdown']=(df['Running Peak'] - df['Portfolio Value'])/df['Running Peak']
     max_dd=df['Drawdown'].max()
-    return max_dd
+    vol=annualised_volatility(portfolio_returns)
+    if vol == 0:
+        return np.inf if max_dd > 0 else 0
+    return max_dd/vol
 
 def sharpe_ratio(portfolio_returns):
     mean_return = portfolio_returns.mean()
