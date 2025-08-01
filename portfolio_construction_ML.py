@@ -139,7 +139,7 @@ def walk_forward_predictions_dynamic(df, features, target, start_date, end_date,
 
     return pd.concat(all_preds)
 
-selected_model_key = "rf"
+selected_model_key = "lasso"
 model = model_configs[selected_model_key]["model"]
 param_grid = model_configs[selected_model_key]["param_grid"]
 
@@ -156,10 +156,14 @@ pred_df = walk_forward_predictions_dynamic(
 
 print("prediction complete")
 
+
 actual_returns = final_df[['weekly_returns']]
 merged_df = pred_df.join(actual_returns, how='left')
 
 r2=r2_score(merged_df['weekly_returns'], merged_df['predicted_return'])
+print("R² Score:", r2)
+'''merged_df.to_csv("predvsactualTEST.csv")
+
 
 plt.figure(figsize=(8, 6))
 sns.regplot(
@@ -175,8 +179,8 @@ plt.grid(True)
 plt.axhline(0, color='gray', linestyle='--', linewidth=0.7)
 plt.axvline(0, color='gray', linestyle='--', linewidth=0.7)
 plt.tight_layout()
-plt.show()
-
+plt.show()'''
+'''
 #_____________________________________________________________________________________________________
 dates = merged_df.index.get_level_values('Date').unique()
 portfolio_values = [1]
@@ -283,3 +287,4 @@ print(f"CAGR: {cagr:.2%}")
 sharpe=sharpe_ratio(portfolio_returns)
 print("Sharpe:",sharpe)
 print("R² Score:", r2)
+'''

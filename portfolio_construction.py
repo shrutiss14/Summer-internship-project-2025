@@ -68,14 +68,14 @@ for i in range(start_index, len(weekly_returns)):
     valid_assets = train_data.columns.tolist()
     print(f"number of valid assets in week {i}",len(valid_assets))
 
-    # mu = mean_historical_return(train_data,returns_data=True,frequency=52,compounding=True,log_returns=False)
-    # mu = ema_historical_return(train_data,returns_data=True,frequency=52,compounding=True,log_returns=False,span=500)
-    mu = capm_return(train_data,market_prices=market_ret,returns_data=True,frequency=52,compounding=True,log_returns=False,risk_free_rate=0.07)
+    mu = mean_historical_return(train_data,returns_data=True,frequency=1,compounding=True,log_returns=False)
+    # mu = ema_historical_return(train_data,returns_data=True,frequency=1,compounding=True,log_returns=False,span=500)
+    # mu = capm_return(train_data,market_prices=market_ret,returns_data=True,frequency=1,compounding=True,log_returns=False,risk_free_rate=0.00135) # 7% annualised risk free rate
      
     
     # S = sample_cov(train_data,returns_data=True,frequency=52,log_returns=False)
     # S = exp_cov(train_data,returns_data=True,frequency=52,log_returns=False,span=180)
-    S = CovarianceShrinkage(train_data,returns_data=True,frequency=52,log_returns=False).ledoit_wolf()
+    S = CovarianceShrinkage(train_data,returns_data=True,frequency=1,log_returns=False).ledoit_wolf()
     
 
     c_h = np.ones(len(valid_assets)) * 0.01
@@ -124,13 +124,13 @@ for i in range(start_index, len(weekly_returns)):
     prev_weights_dict=cleaned_weights
     prev_valid_assets=valid_assets
 
-    if i + 1 < len(weekly_returns):  # to avoid index overflow
-        predicted_mu = mu  # generated in week i, for i+1
+    if i + 1 < len(weekly_returns): 
+        predicted_mu = mu  # predicted returns for week i+1 
 
         for stock in prev_valid_assets:
             if stock in predicted_mu:
-                predicted = predicted_mu[stock]  # prediction at week i for i+1
-                actual = weekly_returns.iloc[i + 1][stock]  # actual return in i+1
+                predicted = predicted_mu[stock]  # prediction for week i+1
+                actual = weekly_returns.iloc[i + 1][stock]  # actual return in week i+1
 
                 return_rows.append({
                     "Date": weekly_returns.index[i + 1],  # date of realized return
@@ -146,9 +146,32 @@ print(f"Total runtime for solver: {end_time - start_time:.2f} seconds")
 
 pred_vs_actual_df = pd.DataFrame(return_rows)
 
-r2 = r2_score(pred_vs_actual_df['weekly_returns'], pred_vs_actual_df['predicted_return'])
+# pred_vs_actual_df.to_csv("predicted_vs_actual_returns.csv", index=False)
+print("\n--- Summary Statistics ---")
+print("Predicted returns (μ̂):")
+print(pred_vs_actual_df["predicted_return"].describe())
+
+print("\nActual weekly returns (r):")
+print(pred_vs_actual_df["weekly_returns"].describe())
+
+
+actual=pred_vs_actual_df['weekly_returns']
+predicted=pred_vs_actual_df['predicted_return']
+r2 = r2_score(actual, predicted)
+
 print("R² score:",r2)
 
+
+
+plt.figure(figsize=(10, 5))
+sns.histplot(pred_vs_actual_df["predicted_return"], color="blue", label="Predicted", kde=True, stat="density")
+sns.histplot(pred_vs_actual_df["weekly_returns"], color="orange", label="Actual", kde=True, stat="density")
+plt.legend()
+plt.title("Distribution of Predicted vs Actual Weekly Returns")
+plt.xlabel("Return")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
 
 #_____________________________________________________________________________________________________
 
@@ -177,4 +200,4 @@ portfolio_df = pd.DataFrame({
 }, index=dates[start_index:])
 
 print(portfolio_df)
-portfolio_df.to_csv("CAPM_EWMA_GMV_portfolio.csv")
+# portfolio_df.to_csv("Mean_shrinkage_GMV_portfolio.csv")

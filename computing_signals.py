@@ -36,7 +36,7 @@ def compute_seasonality_feature(df, y=3):
             signals = []
             for i in range(1, y + 1):
                 past_date = date - pd.DateOffset(weeks=52 * i)
-
+ 
                 try:
                     ret = df.loc[(past_date, ticker), 'weekly_returns']
                 except KeyError:
