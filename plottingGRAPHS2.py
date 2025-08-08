@@ -5,8 +5,8 @@ import numpy as np
 # Prepare the data
 '''data = {
     "Metric": ["CAGR", "Volatility"],
-    "Max Sharpe": [16.11, 14.02],
-    "Global min Var": [16.13, 13.24],
+    "Max Sharpe": [23.94, 18.37],
+    "Global min Var": [15.84, 11.50],
     "Equally weighted portfolio": [35.34, 24.63],
     "Nifty 500 index": [14.68, 15.70],
     "Mutual Fund": [24, 47.94]
@@ -59,9 +59,9 @@ plt.show()'''
 
 '''data = {
     "Metric": ["CAGR", "Volatility"],
-    "Mean Historical Return": [12.51,11.18],
-    "EW Historical Return": [16.10, 13.22],
-    "CAPM": [16.13, 13.24]
+    "Mean Historical Return": [20.17,17.65],
+    "EW Historical Return": [15.30, 16.16],
+    "CAPM": [23.94, 18.37]
 }
 df = pd.DataFrame(data)
 
@@ -109,11 +109,11 @@ ax.set_ylim(0, df.drop("Metric", axis=1).values.max() * 1.15)
 plt.tight_layout()
 plt.show()'''
 
-''''data = {
+'''data = {
     "Metric": ["CAGR", "Volatility"],
-    "Sample Covariance": [12.51,11.19],
-    "EW sample covariance": [7.07, 10.61],
-    "Shrinkage covariance": [16.13, 13.24]
+    "Sample Covariance": [11.64,12.75],
+    "EW sample covariance": [11.98, 12.57],
+    "Shrinkage covariance": [15.84, 11.50]
 }
 df = pd.DataFrame(data)
 
@@ -163,8 +163,8 @@ plt.show()'''
 
 data = {
     "Metric": ["CAGR", "Volatility"],    
-    "Max Sharpe": [16.11, 14.02],
-    "Global min Var": [16.13, 13.24]
+    "Max Sharpe": [23.94, 18.37],
+    "Global min Var": [15.84, 11.50]
 }
 df = pd.DataFrame(data)
 

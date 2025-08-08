@@ -2,7 +2,7 @@ from comparison_metric import compute_cagr_from_weekly_returns,sharpe_ratio,annu
 import pandas as pd
 
 
-portfolio_df=pd.read_csv("rf_portfolio_value.csv",index_col="Date",parse_dates=True)
+portfolio_df=pd.read_csv("EWMA_shrinkage_sharpe_portfolio.csv",index_col="Date",parse_dates=True)
 portfolio_returns = portfolio_df.pct_change(fill_method=None).dropna()
 portfolio_returns=portfolio_returns.squeeze()
 
@@ -28,8 +28,8 @@ print("Sortino:",sortino)
 treynor=treynor_ratio(portfolio_returns,market_ret)
 print("Treynor:",treynor)
 
-inf_rat=information_ratio(portfolio_returns,market_ret)
-print("Information Ratio",inf_rat)
+'''inf_rat=information_ratio(portfolio_returns,market_ret)
+print("Information Ratio",inf_rat)'''
 
 #___________________________________________________________________________________________________________________________
 
@@ -47,7 +47,7 @@ metrics = {
 metrics_df = pd.DataFrame(metrics)
 
 # Save to CSV
-metrics_df.to_csv("rf_portfolio_value_metrics.csv", index=False)
+metrics_df.to_csv("EWMA_shrinkage_sharpe_portfolio_metrics.csv", index=False)
 
 #__________________________________________________________________________________________________
 

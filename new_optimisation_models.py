@@ -59,7 +59,11 @@ def max_sharpe_modified_cvxpy(mu, S, k, allow_short, w_prev, lamb, c_h, tickers=
     y = cp.Variable(N)
     alpha = cp.Variable(pos=True)
 
-    variance = cp.quad_form(y, cp.psd_wrap(S))
+    eps = 1e-6
+    S_reg = S + eps * np.eye(len(S))
+    variance = cp.quad_form(y, cp.psd_wrap(S_reg))
+
+    # variance = cp.quad_form(y, cp.psd_wrap(S))
 
     if w_prev is not None:
         w_prev=np.asarray(w_prev)
@@ -69,7 +73,7 @@ def max_sharpe_modified_cvxpy(mu, S, k, allow_short, w_prev, lamb, c_h, tickers=
         t_cost = 0
 
     # Constraints
-    constraints = [ mu @ y == 1,                    
+    constraints = [ mu @ y >= 1,                    
         cp.norm1(y) <= alpha*k,
         cp.sum(y) == alpha]
     
@@ -82,7 +86,7 @@ def max_sharpe_modified_cvxpy(mu, S, k, allow_short, w_prev, lamb, c_h, tickers=
     objective = cp.Minimize(variance+t_cost)
 
     prob = cp.Problem(objective, constraints)
-    prob.solve(solver=cp.SCS)
+    prob.solve(solver=cp.ECOS)
 
     if y.value is not None:
         # Normalize y to get weights summing to 1
@@ -95,3 +99,4 @@ def max_sharpe_modified_cvxpy(mu, S, k, allow_short, w_prev, lamb, c_h, tickers=
         if tickers is not None:
             return OrderedDict(zip(tickers, w_prev if w_prev is not None else np.ones(N) / N))
         return w_prev if w_prev is not None else np.ones(N) / N
+

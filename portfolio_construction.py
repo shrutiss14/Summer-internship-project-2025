@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import yfinance as yf
 from pypfopt.expected_returns import mean_historical_return,ema_historical_return,capm_return
 from pypfopt.risk_models import sample_cov,exp_cov,CovarianceShrinkage
 from new_optimisation_models import global_min_var_cvxpy,max_sharpe_modified_cvxpy
@@ -8,44 +7,8 @@ from sklearn.metrics import r2_score
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
-#_________________________________________________________________________________________________
-
-url="https://en.wikipedia.org/wiki/NIFTY_500"
-tables = pd.read_html(url)
-tickers_table = tables[4]
-tickers_table.columns = tickers_table.iloc[0]
-tickers_table = tickers_table.drop(index=0).reset_index(drop=True)
-tickers = [ticker + '.NS' for ticker in tickers_table['Symbol'].dropna()]
-data=yf.download(tickers,start="2003-01-01",end="2025-01-01",auto_adjust=False,progress=True)['Adj Close']
-
-summary = []
-for ticker in data.columns:
-    series=data[ticker].dropna()
-    start=series.index.min()
-    end=series.index.max()
-    n_years = (end - start).days / 365.25
-    summary.append({
-                "Ticker": ticker,
-                "Start Date": start.date(),
-                "End Date": end.date(),
-                "Years of Data": round(n_years, 2)
-            })
-summary_df = pd.DataFrame(summary)
-tickers_to_keep = summary_df[summary_df["Years of Data"] >15]["Ticker"].tolist()
-data=data[tickers_to_keep]
-
-#______________________________________________________________________________________________________
-
-data = data.ffill() # forward fill missing values
-weekly_data = data.resample('W-WED').last() #resampling to weekly data
-weekly_returns=weekly_data.pct_change(fill_method=None).dropna(how="all")
-
-#_______________________________________________________________________________________________________
-
+weekly_returns = pd.read_csv("Final_weekly_returns_data.csv", index_col="Date", parse_dates=True)
 market_ret=pd.read_csv("equally_weighted_portfolio_returns.csv",index_col="Date",parse_dates=True)
-
-#____________________________________________________________________________________________________
 
 portfolio_values=[1]
 dates=weekly_returns.index
@@ -54,7 +17,8 @@ prev_valid_assets = None
 
 return_rows=[]
 
-window=520
+return_window=520 # 10 years of weekly data
+risk_window=52 # 1 year of weekly data
 start_index=573
 
 import time
@@ -63,19 +27,20 @@ start_time = time.time()
 for i in range(start_index, len(weekly_returns)):
 
     available_assets = weekly_returns.iloc[i].dropna().index.tolist()
-    train_data = weekly_returns[available_assets].iloc[i-window:i]
-    train_data = train_data.dropna(axis=1,how='any')
-    valid_assets = train_data.columns.tolist()
+    return_train_data = weekly_returns[available_assets].iloc[i-return_window:i]
+    return_train_data = return_train_data.dropna(axis=1,how='any')
+    valid_assets = return_train_data.columns.tolist()
     print(f"number of valid assets in week {i}",len(valid_assets))
 
-    mu = mean_historical_return(train_data,returns_data=True,frequency=1,compounding=True,log_returns=False)
-    # mu = ema_historical_return(train_data,returns_data=True,frequency=1,compounding=True,log_returns=False,span=500)
-    # mu = capm_return(train_data,market_prices=market_ret,returns_data=True,frequency=1,compounding=True,log_returns=False,risk_free_rate=0.00135) # 7% annualised risk free rate
-     
+    # mu = mean_historical_return(return_train_data,returns_data=True,frequency=1,compounding=True,log_returns=False)
+    mu = ema_historical_return(return_train_data,returns_data=True,frequency=1,compounding=True,log_returns=False,span=800)
+    # mu = capm_return(return_train_data,market_prices=market_ret,returns_data=True,frequency=1,compounding=True,log_returns=False,risk_free_rate=0.0013) # 7% annualised risk free rate
     
-    # S = sample_cov(train_data,returns_data=True,frequency=52,log_returns=False)
-    # S = exp_cov(train_data,returns_data=True,frequency=52,log_returns=False,span=180)
-    S = CovarianceShrinkage(train_data,returns_data=True,frequency=1,log_returns=False).ledoit_wolf()
+    risk_train_data = weekly_returns[valid_assets].iloc[i-risk_window:i]
+    
+    # S = sample_cov(risk_train_data,returns_data=True,frequency=1,log_returns=False)
+    # S = exp_cov(risk_train_data,returns_data=True,frequency=1,log_returns=False,span=180)
+    S = CovarianceShrinkage(risk_train_data,returns_data=True,frequency=1,log_returns=False).ledoit_wolf()
     
 
     c_h = np.ones(len(valid_assets)) * 0.01
@@ -91,8 +56,8 @@ for i in range(start_index, len(weekly_returns)):
         aligned = prev_weights_series.reindex(valid_assets).fillna(0)
         w_prev = aligned.values
 
-    cleaned_weights = global_min_var_cvxpy(mu, S, w_prev=w_prev, b_h=b_h, k=kappa, lamb=lamb,c_h=c_h,allow_short=allow_short, tickers=valid_assets)
-    # cleaned_weights = max_sharpe_modified_cvxpy(mu, S, k=kappa, allow_short=allow_short, w_prev=w_prev, lamb=lamb, c_h=c_h, tickers=valid_assets)
+    # cleaned_weights = global_min_var_cvxpy(mu, S, w_prev=w_prev, b_h=b_h, k=kappa, lamb=lamb,c_h=c_h,allow_short=allow_short, tickers=valid_assets)
+    cleaned_weights = max_sharpe_modified_cvxpy(mu, S, k=kappa, allow_short=allow_short, w_prev=w_prev, lamb=lamb, c_h=c_h, tickers=valid_assets)
     
     
     print(f"got optimal weights for week {i}")
@@ -146,13 +111,13 @@ print(f"Total runtime for solver: {end_time - start_time:.2f} seconds")
 
 pred_vs_actual_df = pd.DataFrame(return_rows)
 
-# pred_vs_actual_df.to_csv("predicted_vs_actual_returns.csv", index=False)
-print("\n--- Summary Statistics ---")
+# pred_vs_actual_df.to_csv("pred_vs_actual.csv", index=False)
+'''print("\n--- Summary Statistics ---")
 print("Predicted returns (μ̂):")
 print(pred_vs_actual_df["predicted_return"].describe())
 
 print("\nActual weekly returns (r):")
-print(pred_vs_actual_df["weekly_returns"].describe())
+print(pred_vs_actual_df["weekly_returns"].describe())'''
 
 
 actual=pred_vs_actual_df['weekly_returns']
@@ -160,6 +125,10 @@ predicted=pred_vs_actual_df['predicted_return']
 r2 = r2_score(actual, predicted)
 
 print("R² score:",r2)
+
+'''
+corr = np.corrcoef(actual, predicted)[0, 1]
+print("Correlation:", corr)
 
 
 
@@ -171,12 +140,12 @@ plt.title("Distribution of Predicted vs Actual Weekly Returns")
 plt.xlabel("Return")
 plt.grid(True)
 plt.tight_layout()
-plt.show()
+plt.show()'''
 
 #_____________________________________________________________________________________________________
 
 
-# Scatter plot with a regression line
+'''# Scatter plot with a regression line
 plt.figure(figsize=(8, 6))
 sns.regplot(
     x=pred_vs_actual_df['predicted_return'],
@@ -191,7 +160,7 @@ plt.grid(True)
 plt.axhline(0, color='gray', linestyle='--', linewidth=0.7)
 plt.axvline(0, color='gray', linestyle='--', linewidth=0.7)
 plt.tight_layout()
-plt.show()
+plt.show()'''
 
 
 #__________________________________________________________________________________________________________________________
@@ -200,4 +169,4 @@ portfolio_df = pd.DataFrame({
 }, index=dates[start_index:])
 
 print(portfolio_df)
-# portfolio_df.to_csv("Mean_shrinkage_GMV_portfolio.csv")
+portfolio_df.to_csv("EWMA_shrinkage_sharpe_portfolio.csv")

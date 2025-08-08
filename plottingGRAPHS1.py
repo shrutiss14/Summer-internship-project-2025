@@ -3,8 +3,8 @@ import numpy as np
 
 # Data
 '''labels = ["Max Drawdown", "Sharpe Ratio", "Sortino Ratio", "Treynor Ratio"]
-stats_max_sharpe = [1.67, 1.14, 1.01, 0.25]
-stats_GMV = [1.69, 1.20, 1.09, 0.30]
+stats_max_sharpe = [2.48, 1.26, 1.09, 0.24]
+stats_GMV = [2.16, 1.33, 1.22, 0.34]
 stats_equally_weighted = [2.59, 1.35, 1.28, 0.33]
 stats_nifty500 = [2.12, 0.95, 0.86, 0.20]
 stats_MutualFund = [1.65, 0.74, 0.75, 0.32]
@@ -41,9 +41,9 @@ plt.tight_layout()
 plt.show()'''
 
 '''labels = ["Max Drawdown", "Sharpe Ratio", "Sortino Ratio", "Treynor Ratio"]
-stats_Mean_historical_return = [1.95, 1.11, 1.08, 0.34]
-stats_EWMA = [1.70, 1.19, 1.10, 0.30]
-stats_CAPM = [1.69, 1.20, 1.09, 0.30]
+stats_Mean_historical_return = [2.53, 1.13, 0.99, 0.22]
+stats_EWMA = [2.38, 0.97, 0.82, 0.20]
+stats_CAPM = [2.48, 1.26, 1.09, 0.24]
 
 x = np.arange(len(labels))  # label locations
 bar_width = 0.20
@@ -75,9 +75,9 @@ plt.tight_layout()
 plt.show()'''
 
 '''labels = ["Max Drawdown", "Sharpe Ratio", "Sortino Ratio", "Treynor Ratio"]
-stats_sample_cov = [1.95, 1.11, 1.08, 0.34]
-stats_EWcov = [2.02, 0.69, 0.65, 0.24]
-stats_shrinkage = [1.69, 1.20, 1.09, 0.30]
+stats_sample_cov = [2.36, 0.92, 0.83, 0.29]
+stats_EWcov = [2.43, 0.96, 0.88, 0.30]
+stats_shrinkage = [2.16, 1.33, 1.22, 0.34]
 
 x = np.arange(len(labels))  # label locations
 bar_width = 0.20
@@ -112,8 +112,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 labels = ["Max Drawdown", "Sharpe Ratio", "Sortino Ratio", "Treynor Ratio"]
-stats_max_sharpe = [1.67, 1.14, 1.01, 0.25]
-stats_GMV = [1.69, 1.20, 1.09, 0.30]
+stats_max_sharpe = [2.48, 1.26, 1.09, 0.24]
+stats_GMV = [2.16, 1.33, 1.22, 0.34]
 
 x = np.arange(len(labels))  # Group centers
 bar_width = 0.35
